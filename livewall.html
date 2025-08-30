@@ -24,7 +24,7 @@
 </head>
 <body>
   <header>
-    <h1>Love Notes for Nidhi <span class="muted">(auto‑refreshing)</span></h1>
+    <h1>Love Notes for Nidhi <span class="muted">(auto-refreshing)</span></h1>
     <div><span class="muted">Status</span><span id="dot" class="dot"></span></div>
   </header>
   <section id="grid" class="grid"></section>
@@ -34,38 +34,67 @@
     const dot  = document.getElementById('dot');
     let lastCount = 0;
 
+    // Local ownership / admin flags
+    const own = new Set(JSON.parse(localStorage.getItem('nidhi40_own')||'[]'));
+    const params = new URLSearchParams(location.search);
+    if(params.get('admin')==='1') localStorage.setItem('nidhi40_admin','1');
+    if(params.get('admin')==='0') localStorage.removeItem('nidhi40_admin');
+    const isAdmin = localStorage.getItem('nidhi40_admin')==='1';
+
     async function load(){
       try{
         const res = await fetch(ENDPOINT_URL+"?mode=list");
         const data = await res.json();
         if(!data.ok) throw new Error('not ok');
         dot.classList.add('ok');
+
         const allItems = data.items.filter(x=>x.consent);
         if(allItems.length!==lastCount){
           const hidden = new Set(JSON.parse(localStorage.getItem('nidhi40_hidden')||'[]'));
-          const display = allItems.filter(it=>!hidden.has(String(it.ts)));
+          const display = allItems.filter(it=>!hidden.has(getId(it)));
           grid.innerHTML = display.slice(-120).map(render).join('');
           lastCount = allItems.length;
         }
-      }catch(e){ dot.classList.remove('ok'); }
+      }catch(e){
+        dot.classList.remove('ok');
+      }
     }
 
     function render(it){
       const name = escapeHtml(it.name||'');
       const msg  = escapeHtml(it.message||'');
-      const id   = String(it.ts||Math.random());
+      const id   = getId(it);
       const likes = Number(localStorage.getItem('nidhi40_like_'+id)||0);
-      return `<article class="card" data-id="${id}"><div class="name">${name}</div><div class="msg">${msg}</div><div class="actions"><button class="like-btn">❤️ <span class="count">${likes}</span></button><button class="del-btn">🗑️</button></div></article>`;
+      const key = makeKey(it.name||'', it.message||'');
+      const del = (isAdmin || own.has(key)) ? '<button class="del-btn">🗑️</button>' : '';
+      return `<article class="card" data-id="${id}">
+                <div class="name">${name}</div>
+                <div class="msg">${msg}</div>
+                <div class="actions">
+                  <button class="like-btn">❤️ <span class="count">${likes}</span></button>
+                  ${del}
+                </div>
+              </article>`;
     }
 
     function escapeHtml(s){
       return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
     }
 
+    function makeKey(name,msg){
+      return btoa(unescape(encodeURIComponent(name.trim()+"|"+msg.trim())));
+    }
+
+    function getId(it){
+      // Prefer server timestamp if present, else fall back to stable content key
+      return String(it.ts || makeKey(it.name||'', it.message||''));
+    }
+
     grid.addEventListener('click', e=>{
       const card = e.target.closest('.card');
       if(!card) return;
       const id = card.dataset.id;
+
       if(e.target.closest('.like-btn')){
         const key = 'nidhi40_like_'+id;
         let c = Number(localStorage.getItem(key)||0)+1;
@@ -82,7 +111,8 @@
       }
     });
 
-    load(); setInterval(load, 4000);
+    load();
+    setInterval(load, 4000);
   </script>
 </body>
 </html>
