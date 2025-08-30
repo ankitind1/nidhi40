@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nidhi @ 40 — Live Love Notes Wall</title>
+  <style>
+    :root{--pink:#ff2ea6;--ink:#101010;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;background:#fff}
+    header{position:sticky;top:0;background:linear-gradient(90deg,#fff,#ffe7f4);padding:14px 18px;border-bottom:2px solid #ffd2ea;display:flex;justify-content:space-between;align-items:center}
+    h1{margin:0;font-size:20px}
+    .dot{width:10px;height:10px;border-radius:50%;background:#bbb;display:inline-block;margin-left:8px}
+    .dot.ok{background:#22c55e}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;padding:18px}
+    .card{border:2px solid #ffd2ea;border-radius:18px;padding:16px;background:#fff;box-shadow:0 6px 16px rgba(255,46,166,.12)}
+    .name{font-weight:700;color:#c9006c;margin-bottom:8px}
+    .msg{font-size:16px;line-height:1.35;}
+    .muted{color:#666}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Love Notes for Nidhi <span class="muted">(auto‑refreshing)</span></h1>
+    <div><span class="muted">Status</span><span id="dot" class="dot"></span></div>
+  </header>
+  <section id="grid" class="grid"></section>
+  <script>
+    const ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbygYMSwCALqz_0PC3CQ7v0QtRkGa2wQVJZuPKaZqS0quaPcoOzolrHxjux1sNgYEmMz2A/exec';
+    const grid = document.getElementById('grid');
+    const dot  = document.getElementById('dot');
+    let lastCount = 0;
+
+    async function load(){
+      try{
+        const res = await fetch(ENDPOINT_URL+"?mode=list");
+        const data = await res.json();
+        if(!data.ok) throw new Error('not ok');
+        dot.classList.add('ok');
+        const items = data.items.filter(x=>x.consent);
+        if(items.length!==lastCount){
+          grid.innerHTML = items.slice(-120).map(render).join('');
+          lastCount = items.length;
+        }
+      }catch(e){ dot.classList.remove('ok'); }
+    }
+
+    function render(it){
+      const name = escapeHtml(it.name||'');
+      const msg  = escapeHtml(it.message||'');
+      return `<article class="card"><div class="name">${name}</div><div class="msg">${msg}</div></article>`;
+    }
+
+    function escapeHtml(s){
+      return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+    }
+
+    load(); setInterval(load, 4000);
+  </script>
+</body>
+</html>

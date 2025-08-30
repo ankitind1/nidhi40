@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Share a Wish & Memory for Nidhi</title>
+  <meta name="description" content="Scan & share your birthday wish and one favorite memory for Nidhi's 40th." />
+  <style>
+    :root{--pink:#ff2ea6;--pink2:#ff4fb4;--bg:#fff;--ink:#1a1a1a;--muted:#666;}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#fff, #ffe7f4 60%);color:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{width:min(780px,100%);background:#fff;border-radius:24px;box-shadow:0 10px 30px rgba(255,46,166,.25);padding:28px 24px 20px;border:2px solid #ffd2ea}
+    h1{margin:0 0 8px;font-size:28px}
+    .sub{color:var(--muted);margin:0 0 16px}
+    label{font-weight:600;display:block;margin:16px 0 8px}
+    textarea{width:100%;min-height:140px;resize:vertical;padding:14px 16px;border-radius:14px;border:2px solid #ffd2ea;font-size:16px;line-height:1.4;}
+    textarea:focus, input:focus{outline:none;border-color:var(--pink)}
+    input[type="text"]{width:100%;padding:12px 14px;border-radius:14px;border:2px solid #ffd2ea;font-size:16px}
+    .row{display:flex;gap:12px;align-items:center}
+    .muted{color:var(--muted)}
+    .counter{font-size:13px;color:var(--muted)}
+    .consent{display:flex;align-items:flex-start;gap:10px;margin-top:8px}
+    .consent input{margin-top:4px}
+    button{background:var(--pink);color:white;border:none;border-radius:14px;padding:12px 18px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(255,46,166,.35);transition:transform .08s ease, box-shadow .2s ease}
+    button:hover{transform:translateY(-1px)}
+    button:disabled{opacity:.6;cursor:not-allowed;box-shadow:none}
+    .footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+    .success{display:none;margin-top:18px;padding:14px;border-radius:12px;background:#e7ffe7;border:2px solid #b8f5b8;color:#0a5a0a}
+    .error{display:none;margin-top:18px;padding:14px;border-radius:12px;background:#ffe7f0;border:2px solid #ffc6da;color:#7a0a2f}
+    .brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .badge{background:#fff; border:2px solid #ffd2ea; color:#c9006c; padding:4px 10px; border-radius:999px; font-weight:700; font-size:12px}
+    .pill{background:#fff; border:2px dashed #ffd2ea; color:#c9006c; padding:4px 10px; border-radius:10px; font-weight:600; font-size:12px}
+    .tiny{font-size:12px;color:#8a8a8a}
+    .link{color:#c9006c;text-decoration:none;border-bottom:1px dotted #c9006c}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">
+      <span class="badge">Nidhi @ 40</span>
+      <span class="pill">Scan → Share a Wish + Memory</span>
+    </div>
+    <h1>Leave a Wish & Favorite Memory</h1>
+    <p class="sub">Short & sweet is perfect. Thank you for celebrating Nidhi! 💖</p>
+
+    <label for="message">Your message <span class="muted">(max 800 characters)</span></label>
+    <textarea id="message" placeholder="Example: Happy 40th, Nidhi! That rainy karaoke night in 2016 is still our favorite memory — here’s to more spontaneous joy this decade!"></textarea>
+    <div class="footer"><span class="counter" id="counter">0 / 800</span></div>
+
+    <label for="name">Your name(s) & how you know Nidhi</label>
+    <input id="name" type="text" placeholder="Ankit & Nidhi — family friends" />
+
+    <div class="consent">
+      <input id="consent" type="checkbox" />
+      <label for="consent" class="muted">Okay to show this on a screen tonight and in a keepsake book?</label>
+    </div>
+
+    <div style="margin-top:16px" class="row">
+      <button id="submit">Send Wish ✨</button>
+      <a class="link tiny" href="./livewall.html" target="_blank">Open Live Wall</a>
+    </div>
+
+    <div id="success" class="success">Thanks! Your note was received. 🎉 You can close this or submit another from the same phone.</div>
+    <div id="error" class="error">Please add your name and a message (up to 800 characters), then try again.</div>
+
+    <p class="tiny" style="margin-top:16px">Need a new blank form? <a class="link" href="?new=1">Tap here</a></p>
+  </main>
+
+  <script>
+    const ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbygYMSwCALqz_0PC3CQ7v0QtRkGa2wQVJZuPKaZqS0quaPcoOzolrHxjux1sNgYEmMz2A/exec';
+
+    const $ = (id)=>document.getElementById(id);
+    const msg = $("message"), nameEl = $("name"), consent = $("consent"), counter=$("counter");
+
+    if(new URLSearchParams(location.search).get('new')==='1'){
+      localStorage.removeItem('nidhi40_name');
+    }
+
+    nameEl.value = localStorage.getItem('nidhi40_name')||'';
+
+    msg.addEventListener('input',()=>{
+      const len = msg.value.length; counter.textContent = `${len} / 800`;
+      if(len>800) msg.value = msg.value.slice(0,800);
+    });
+
+    $("submit").addEventListener('click', async ()=>{
+      const text = msg.value.trim();
+      const who  = nameEl.value.trim();
+      const ok   = consent.checked;
+      if(text.length<1 || text.length>800 || !who){
+        show("error"); return;
+      }
+      hide("error");
+      const btn = $("submit");
+      btn.disabled = true; btn.textContent = 'Sending…';
+      try{
+        // No 'Content-Type: application/json' header -> stays a simple request (text/plain), avoiding CORS preflight
+        const res = await fetch(ENDPOINT_URL, {method:'POST', body: JSON.stringify({message:text,name:who,consent:ok})});
+        const data = await res.json();
+        if(data.ok){
+          localStorage.setItem('nidhi40_name', who);
+          msg.value=''; consent.checked=false; counter.textContent='0 / 800';
+          show("success"); confetti();
+        } else { show("error"); }
+      }catch(e){ show("error"); }
+      btn.disabled = false; btn.textContent = 'Send Wish ✨';
+    });
+
+    function show(id){ $(id).style.display='block'; }
+    function hide(id){ $(id).style.display='none'; }
+
+    function confetti(){
+      const N = 120; const dur=1200; const body=document.body; const rect = body.getBoundingClientRect();
+      for(let i=0;i<N;i++){
+        const d = document.createElement('div');
+        const size = 6+Math.random()*8;
+        d.style.position='fixed';
+        d.style.left = (Math.random()*rect.width)+'px';
+        d.style.top  = '-20px';
+        d.style.width=d.style.height=size+'px';
+        d.style.background = Math.random()<.5? '#ff2ea6' : '#ffd2ea';
+        d.style.opacity = 0.9;
+        d.style.transform = `rotate(${Math.random()*360}deg)`;
+        d.style.borderRadius = Math.random()<.3? '50%' : '8px';
+        d.style.zIndex=9999;
+        document.body.appendChild(d);
+        const endY = rect.height + 40;
+        const drift = (Math.random()*120-60);
+        const t = d; const start = performance.now();
+        (function anim(now){
+          const p = Math.min(1,(now-start)/dur);
+          t.style.top = (-20 + p*endY)+'px';
+          t.style.left = (parseFloat(t.style.left)+ drift*p/2)+'px';
+          t.style.transform = `rotate(${p*720}deg)`;
+          if(p<1) requestAnimationFrame(anim); else t.remove();
+        })(start);
+      }
+    }
+  </script>
+</body>
+</html>
