@@ -1,0 +1,6 @@
+[build]
+  # No build step needed for pure static HTML
+  command = ""
+  # Publish the repository root (contains index.html)
+  publish = "."
+
