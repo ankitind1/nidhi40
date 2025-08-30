@@ -17,6 +17,9 @@
     .name{font-weight:700;color:#c9006c;margin-bottom:8px}
     .msg{font-size:16px;line-height:1.35;}
     .muted{color:#666}
+    .actions{margin-top:10px;display:flex;gap:10px}
+    .like-btn,.del-btn{background:none;border:none;cursor:pointer;color:#c9006c;font-size:14px;display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:8px}
+    .like-btn:hover,.del-btn:hover{background:#ffe7f4}
   </style>
 </head>
 <body>
@@ -37,10 +40,12 @@
         const data = await res.json();
         if(!data.ok) throw new Error('not ok');
         dot.classList.add('ok');
-        const items = data.items.filter(x=>x.consent);
-        if(items.length!==lastCount){
-          grid.innerHTML = items.slice(-120).map(render).join('');
-          lastCount = items.length;
+        const allItems = data.items.filter(x=>x.consent);
+        if(allItems.length!==lastCount){
+          const hidden = new Set(JSON.parse(localStorage.getItem('nidhi40_hidden')||'[]'));
+          const display = allItems.filter(it=>!hidden.has(String(it.ts)));
+          grid.innerHTML = display.slice(-120).map(render).join('');
+          lastCount = allItems.length;
         }
       }catch(e){ dot.classList.remove('ok'); }
     }
@@ -48,12 +53,34 @@
     function render(it){
       const name = escapeHtml(it.name||'');
       const msg  = escapeHtml(it.message||'');
-      return `<article class="card"><div class="name">${name}</div><div class="msg">${msg}</div></article>`;
+      const id   = String(it.ts||Math.random());
+      const likes = Number(localStorage.getItem('nidhi40_like_'+id)||0);
+      return `<article class="card" data-id="${id}"><div class="name">${name}</div><div class="msg">${msg}</div><div class="actions"><button class="like-btn">❤️ <span class="count">${likes}</span></button><button class="del-btn">🗑️</button></div></article>`;
     }
 
     function escapeHtml(s){
       return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
     }
+
+    grid.addEventListener('click', e=>{
+      const card = e.target.closest('.card');
+      if(!card) return;
+      const id = card.dataset.id;
+      if(e.target.closest('.like-btn')){
+        const key = 'nidhi40_like_'+id;
+        let c = Number(localStorage.getItem(key)||0)+1;
+        localStorage.setItem(key,c);
+        card.querySelector('.count').textContent = c;
+      } else if(e.target.closest('.del-btn')){
+        card.remove();
+        const key = 'nidhi40_hidden';
+        const hidden = JSON.parse(localStorage.getItem(key)||'[]');
+        if(!hidden.includes(id)){
+          hidden.push(id);
+          localStorage.setItem(key, JSON.stringify(hidden));
+        }
+      }
+    });
 
     load(); setInterval(load, 4000);
   </script>

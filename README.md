@@ -4,7 +4,7 @@ A tiny, static microsite to collect birthday wishes and favorite memories and di
 
 ## What’s here
 - `index.html`: Simple form to submit a wish (max 800 chars), name, and consent. Persists the name in `localStorage`. Shows a confetti animation on success.
-- `livewall.html`: Auto‑refreshing grid that fetches consented notes every 4 seconds and renders them for display (e.g., on a projector). Escapes HTML to prevent XSS.
+- `livewall.html`: Auto‑refreshing grid that fetches consented notes every 4 seconds and renders them for display (e.g., on a projector). Each note includes a local ❤️ like counter and a 🗑️ delete button to hide it. Escapes HTML to prevent XSS.
 
 Both files POST/GET to the same `ENDPOINT_URL` (a Google Apps Script Web App).
 
@@ -75,4 +75,5 @@ After deploying, copy the Web App URL and set it as `ENDPOINT_URL` in both HTML 
 - Privacy: Only messages with `consent` render on the wall; storage is in your Google Sheet.
 - Safety: The wall escapes HTML before rendering; keep doing server‑side validation in Apps Script as needed.
 - Customization: Update colors, copy, and limits inline in the two HTML files.
+- Likes/deletes are stored in the viewer's browser only; they don't modify the underlying data.
 
