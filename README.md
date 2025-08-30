@@ -4,7 +4,7 @@ A tiny, static microsite to collect birthday wishes and favorite memories and di
 
 ## What’s here
 - `index.html`: Simple form to submit a wish (max 800 chars), name, and consent. Persists the name in `localStorage`. Shows a confetti animation on success.
-- `livewall.html`: Auto‑refreshing grid that fetches consented notes every 4 seconds and renders them for display (e.g., on a projector). Each note includes a local ❤️ like counter and a 🗑️ delete button. Delete buttons appear for notes submitted from the same browser or, if you open the page with ?admin=1, for every note. Deleted notes stay hidden after you refresh. Escapes HTML to prevent XSS.
+- `livewall.html`: Auto-refreshing grid that fetches consented notes every 4 seconds and renders them for display (e.g., on a projector). Each note includes a local ❤️ like counter and a 🗑️ delete button. Delete buttons appear for notes submitted from the same browser or, if you open the page with `?admin=1`, for every note. Deleted notes stay hidden after you refresh. Escapes HTML to prevent XSS.
 
 Both files POST/GET to the same `ENDPOINT_URL` (a Google Apps Script Web App).
 
@@ -18,11 +18,11 @@ Tip: If you fork or reuse this, update the `ENDPOINT_URL` in both files.
 The site expects a Web App endpoint that:
 - Accepts `POST` with body: `{ message: string, name: string, consent: boolean }`
 - Returns JSON: `{ ok: true }` (or `{ ok: false }` on error)
-- Serves `GET ?mode=list` and returns `{ ok: true, items: Array<{message,name,consent}> }`
+- Serves `GET ?mode=list` and returns `{ ok: true, items: Array<{message,name,consent,ts}> }`
 
 This frontend avoids CORS preflight by not setting a `Content-Type` header when posting. Ensure your Apps Script reads raw `text/plain` and parses JSON.
 
-Example Apps Script (Sheet‑backed):
+Example Apps Script (Sheet-backed):
 ```js
 // Create a Google Sheet with header row: message | name | consent | ts
 // Set its ID below and deploy this script as a Web App
@@ -61,19 +61,3 @@ function json(obj) {
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
-```
-
-After deploying, copy the Web App URL and set it as `ENDPOINT_URL` in both HTML files.
-
-## Deploy (GitHub Pages)
-- Push this repo to GitHub (done).
-- In the repo Settings → Pages, set Source to `main` (root).
-- Your site will be available at `https://<your-username>.github.io/<repo>/`.
-- Open `index.html` to submit and `livewall.html` to display.
-
-## Notes
-- Privacy: Only messages with `consent` render on the wall; storage is in your Google Sheet.
-- Safety: The wall escapes HTML before rendering; keep doing server‑side validation in Apps Script as needed.
-- Customization: Update colors, copy, and limits inline in the two HTML files.
-- Likes and deletes are stored in the viewer's browser and don't affect the underlying data. Deleted notes are hidden only locally. Open livewall.html?admin=1 to enable delete controls for all notes.
-
