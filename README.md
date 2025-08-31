@@ -1,18 +1,16 @@
-# Nidhi @ 40 — Wishes & Live Wall
+# Nidhi @ 40 — Wishes
 
-A tiny, static microsite to collect birthday wishes and favorite memories and display them on a live wall. No build step, no dependencies — just HTML/CSS/JS plus a Google Apps Script backend.
+A tiny, static microsite to collect birthday wishes and favorite memories. No build step, no dependencies — just HTML/CSS/JS plus a Google Apps Script backend.
 
 ## What’s here
 - `index.html`: Simple form to submit a wish (max 800 chars), name, and consent. Persists the name in `localStorage`. Shows a confetti animation on success.
-- `livewall.html`: Auto‑refreshing grid that fetches consented notes every 4 seconds and renders them for display (e.g., on a projector). Escapes HTML to prevent XSS.
 
-Both files POST/GET to the same `ENDPOINT_URL` (a Google Apps Script Web App).
+The form posts to the `ENDPOINT_URL` (a Google Apps Script Web App).
 
 ## Quick start
 - Open `index.html` locally to submit a test message.
-- Open `livewall.html` to see the live wall update.
 
-Tip: If you fork or reuse this, update the `ENDPOINT_URL` in both files.
+Tip: If you fork or reuse this, update the `ENDPOINT_URL` in `index.html`.
 
 ## Backend (Google Apps Script)
 The site expects a Web App endpoint that:
@@ -63,16 +61,16 @@ function json(obj) {
 }
 ```
 
-After deploying, copy the Web App URL and set it as `ENDPOINT_URL` in both HTML files.
+After deploying, copy the Web App URL and set it as `ENDPOINT_URL` in `index.html`.
 
 ## Deploy (GitHub Pages)
 - Push this repo to GitHub (done).
 - In the repo Settings → Pages, set Source to `main` (root).
 - Your site will be available at `https://<your-username>.github.io/<repo>/`.
-- Open `index.html` to submit and `livewall.html` to display.
+- Open `index.html` to submit.
 
 ## Notes
-- Privacy: Only messages with `consent` render on the wall; storage is in your Google Sheet.
-- Safety: The wall escapes HTML before rendering; keep doing server‑side validation in Apps Script as needed.
-- Customization: Update colors, copy, and limits inline in the two HTML files.
+- Privacy: submissions are stored in your Google Sheet.
+- Safety: keep doing server‑side validation in Apps Script as needed.
+- Customization: update colors, copy, and limits inline in the HTML file.
 
