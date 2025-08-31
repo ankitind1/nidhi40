@@ -1,26 +1,28 @@
-# Nidhi @ 40 — Wishes
+# Nidhi @ 40 — Wishes & Live Wall
 
-A tiny, static microsite to collect birthday wishes and favorite memories. No build step, no dependencies — just HTML/CSS/JS plus a Google Apps Script backend.
+A tiny, static microsite to collect birthday wishes and favorite memories and display them on a live wall. No build step, no dependencies — just HTML/CSS/JS plus a Google Apps Script backend.
 
 ## What’s here
 - `index.html`: Simple form to submit a wish (max 800 chars), name, and consent. Persists the name in `localStorage`. Shows a confetti animation on success.
+- `livewall.html`: Auto-refreshing grid that fetches consented notes every 4 seconds and renders them for display (e.g., on a projector). Each note includes a local ❤️ like counter and a 🗑️ delete button. Delete buttons appear for notes submitted from the same browser or, if you open the page with `?admin=1`, for every note. Deleted notes stay hidden after you refresh. Escapes HTML to prevent XSS.
 
-The form posts to the `ENDPOINT_URL` (a Google Apps Script Web App).
+Both files POST/GET to the same `ENDPOINT_URL` (a Google Apps Script Web App).
 
 ## Quick start
 - Open `index.html` locally to submit a test message.
+- Open `livewall.html` to see the live wall update.
 
-Tip: If you fork or reuse this, update the `ENDPOINT_URL` in `index.html`.
+Tip: If you fork or reuse this, update the `ENDPOINT_URL` in both files.
 
 ## Backend (Google Apps Script)
 The site expects a Web App endpoint that:
 - Accepts `POST` with body: `{ message: string, name: string, consent: boolean }`
 - Returns JSON: `{ ok: true }` (or `{ ok: false }` on error)
-- Serves `GET ?mode=list` and returns `{ ok: true, items: Array<{message,name,consent}> }`
+- Serves `GET ?mode=list` and returns `{ ok: true, items: Array<{message,name,consent,ts}> }`
 
 This frontend avoids CORS preflight by not setting a `Content-Type` header when posting. Ensure your Apps Script reads raw `text/plain` and parses JSON.
 
-Example Apps Script (Sheet‑backed):
+Example Apps Script (Sheet-backed):
 ```js
 // Create a Google Sheet with header row: message | name | consent | ts
 // Set its ID below and deploy this script as a Web App
@@ -59,18 +61,3 @@ function json(obj) {
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
-```
-
-After deploying, copy the Web App URL and set it as `ENDPOINT_URL` in `index.html`.
-
-## Deploy (GitHub Pages)
-- Push this repo to GitHub (done).
-- In the repo Settings → Pages, set Source to `main` (root).
-- Your site will be available at `https://<your-username>.github.io/<repo>/`.
-- Open `index.html` to submit.
-
-## Notes
-- Privacy: submissions are stored in your Google Sheet.
-- Safety: keep doing server‑side validation in Apps Script as needed.
-- Customization: update colors, copy, and limits inline in the HTML file.
-

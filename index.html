@@ -99,6 +99,7 @@
         const data = await res.json();
         if(data.ok){
           localStorage.setItem('nidhi40_name', who);
+          saveOwn(who, text);
           msg.value=''; consent.checked=false; counter.textContent='0 / 800';
           show("success"); confetti();
         } else { show("error"); }
@@ -108,6 +109,19 @@
 
     function show(id){ $(id).style.display='block'; }
     function hide(id){ $(id).style.display='none'; }
+
+    function makeKey(name,msg){
+      return btoa(unescape(encodeURIComponent(name.trim()+"|"+msg.trim())));
+    }
+
+    function saveOwn(name,msg){
+      const key = makeKey(name,msg);
+      const list = JSON.parse(localStorage.getItem('nidhi40_own')||'[]');
+      if(!list.includes(key)){
+        list.push(key);
+        localStorage.setItem('nidhi40_own', JSON.stringify(list));
+      }
+    }
 
     function confetti(){
       const N = 120; const dur=1200; const body=document.body; const rect = body.getBoundingClientRect();
