@@ -1,18 +1,20 @@
-# Nidhi @ 40 — Wishes & Live Wall
+# Nidhi @ 40 — Wishes, RSVP & Live Wall
 
-A tiny, static microsite to collect birthday wishes and favorite memories and display them on a live wall. No build step, no dependencies — just HTML/CSS/JS plus a Google Apps Script backend.
+A tiny, static microsite to collect birthday wishes, RSVPs, and favorite memories and display them on a live wall. No build step, no dependencies — just HTML/CSS/JS plus a Google Apps Script backend.
 
 ## What’s here
 - `index.html`: Simple form to submit a wish (max 800 chars), name, and consent. Persists the name in `localStorage`. Shows a confetti animation on success.
+- `rsvp.html`: Lightweight RSVP form that collects a family name and the number of adults and kids attending. Posts to a Google Apps Script endpoint.
 - `livewall.html`: Auto-refreshing grid that fetches consented notes every 4 seconds and renders them for display (e.g., on a projector). Each note includes a local ❤️ like counter and a 🗑️ delete button. Delete buttons appear for notes submitted from the same browser or, if you open the page with `?admin=1`, for every note. Deleted notes stay hidden after you refresh. Escapes HTML to prevent XSS.
 
-Both files POST/GET to the same `ENDPOINT_URL` (a Google Apps Script Web App).
+All forms POST/GET to Google Apps Script Web Apps. Update the `ENDPOINT_URL` in each file to point to your own backend.
 
 ## Quick start
 - Open `index.html` locally to submit a test message.
+- Open `rsvp.html` to send yourself a test RSVP.
 - Open `livewall.html` to see the live wall update.
 
-Tip: If you fork or reuse this, update the `ENDPOINT_URL` in both files.
+Tip: If you fork or reuse this, update the `ENDPOINT_URL` in all files.
 
 ## Backend (Google Apps Script)
 The site expects a Web App endpoint that:
