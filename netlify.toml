@@ -1,6 +1,12 @@
 [build]
-  # No build step needed for pure static HTML
-  command = ""
-  # Publish the repository root (contains index.html)
   publish = "."
 
+[[redirects]]
+  from = "/rsvp"
+  to = "/rsvp/"
+  status = 301
+
+[[redirects]]
+  from = "/rsvp/thanks"
+  to = "/rsvp/thanks/"
+  status = 301
