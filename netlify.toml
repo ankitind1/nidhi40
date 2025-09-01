@@ -5,3 +5,8 @@
   from = "/rsvp"
   to = "/rsvp/"
   status = 301
+
+[[redirects]]
+  from = "/rsvp/thanks"
+  to = "/rsvp/thanks/"
+  status = 301

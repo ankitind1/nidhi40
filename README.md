@@ -1,65 +1,35 @@
 # Nidhi @ 40 — Wishes, RSVP & Live Wall
 
-A tiny, static microsite to collect birthday wishes, RSVPs, and favorite memories and display them on a live wall. No build step, no dependencies — just HTML/CSS/JS plus a Google Apps Script backend.
+A tiny, static microsite to collect birthday wishes, RSVPs, and favorite memories and display them on a live wall. No build step, no dependencies — just HTML/CSS/JS. **Wishes + Live Wall** use a Google Apps Script backend. **RSVP** is handled via **Netlify Forms** at `/rsvp/`.
 
 ## What’s here
-- `index.html`: Simple form to submit a wish (max 800 chars), name, and consent. Persists the name in `localStorage`. Shows a confetti animation on success.
-- `rsvp.html`: Lightweight RSVP form that collects a family name and the number of adults and kids attending. Posts to a Google Apps Script endpoint.
-- `livewall.html`: Auto-refreshing grid that fetches consented notes every 4 seconds and renders them for display (e.g., on a projector). Each note includes a local ❤️ like counter and a 🗑️ delete button. Delete buttons appear for notes submitted from the same browser or, if you open the page with `?admin=1`, for every note. Deleted notes stay hidden after you refresh. Escapes HTML to prevent XSS.
+- `index.html` — Simple form to submit a wish (max 800 chars), name, and consent. Persists the name in `localStorage`. Shows a confetti animation on success.
+- `rsvp/` — Netlify-backed RSVP form that collects **family name**, **number of adults**, **number of kids**, plus optional **email** and **phone**; then redirects to a thank-you page at `/rsvp/thanks/`.
+- `livewall.html` — Auto-refreshing grid that fetches consented notes every 4 seconds and renders them for display (e.g., on a projector). Each note includes a local ❤️ like counter and a 🗑️ delete button. Delete buttons appear for notes submitted from the same browser or, if you open the page with `?admin=1`, for every note. Deleted notes stay hidden after refresh. Escapes HTML to prevent XSS.
 
-All forms POST/GET to Google Apps Script Web Apps. Update the `ENDPOINT_URL` in each file to point to your own backend.
+**Configuration notes**
+- Wishes/Live Wall POST/GET to Google Apps Script Web Apps. Update the `ENDPOINT_URL` in those files to point to your own backend.
+- The RSVP form submits directly to Netlify (no custom backend). After first submission, view entries in **Netlify → Forms → rsvp**. Email notifications can be enabled there.
 
 ## Quick start
-- Open `index.html` locally to submit a test message.
-- Open `rsvp.html` to send yourself a test RSVP.
-- Open `livewall.html` to see the live wall update.
+- Open `index.html` locally to submit a test message (requires your Apps Script endpoint).
+- Open `rsvp/` to send yourself a test RSVP.
+- Open `livewall.html` to see the live wall update (requires your Apps Script endpoint).
 
-Tip: If you fork or reuse this, update the `ENDPOINT_URL` in all files.
+Tip: If you fork or reuse this, update the `ENDPOINT_URL` in the **non-RSVP** files.
 
-## Backend (Google Apps Script)
-The site expects a Web App endpoint that:
-- Accepts `POST` with body: `{ message: string, name: string, consent: boolean }`
-- Returns JSON: `{ ok: true }` (or `{ ok: false }` on error)
-- Serves `GET ?mode=list` and returns `{ ok: true, items: Array<{message,name,consent,ts}> }`
+## Netlify routing (RSVP)
+Make sure `netlify.toml` includes trailing-slash redirects so `/rsvp` and `/rsvp/thanks` resolve:
+```toml
+[build]
+  publish = "."
 
-This frontend avoids CORS preflight by not setting a `Content-Type` header when posting. Ensure your Apps Script reads raw `text/plain` and parses JSON.
+[[redirects]]
+  from = "/rsvp"
+  to = "/rsvp/"
+  status = 301
 
-Example Apps Script (Sheet-backed):
-```js
-// Create a Google Sheet with header row: message | name | consent | ts
-// Set its ID below and deploy this script as a Web App
-// (Execute as: Me; Who has access: Anyone with the link)
-const SHEET_ID = 'PUT_YOUR_SHEET_ID_HERE';
-
-function doPost(e) {
-  try {
-    const raw = e && e.postData && e.postData.contents;
-    const { message, name, consent } = JSON.parse(raw || '{}');
-    if (!message || !name || message.length > 800) return json({ ok: false });
-    const sh = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
-    sh.appendRow([message, name, !!consent, new Date()]);
-    return json({ ok: true });
-  } catch (err) {
-    return json({ ok: false });
-  }
-}
-
-function doGet(e) {
-  const mode = (e && e.parameter && e.parameter.mode) || '';
-  if (mode !== 'list') return json({ ok: true, items: [] });
-  const sh = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
-  const values = sh.getDataRange().getValues();
-  const items = values.slice(1).map(r => ({
-    message: String(r[0] || ''),
-    name: String(r[1] || ''),
-    consent: Boolean(r[2]),
-    ts: r[3]
-  }));
-  return json({ ok: true, items });
-}
-
-function json(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+[[redirects]]
+  from = "/rsvp/thanks"
+  to = "/rsvp/thanks/"
+  status = 301
