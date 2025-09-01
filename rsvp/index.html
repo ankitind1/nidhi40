@@ -121,7 +121,7 @@
 
           <div>
             <label for="phone">Phone (optional)</label>
-            <input id="phone" name="phone" type="tel" inputmode="tel" pattern="[0-9+()\\-\\s]{7,}" placeholder="+1 (___) ___-____" />
+            <input id="phone" name="phone" type="tel" inputmode="tel" pattern="[0-9+()\-\\s]{7,}" placeholder="+1 (___) ___-____" />
           </div>
         </div>
 
@@ -156,7 +156,6 @@
       form.addEventListener('submit', function (e) {
         clearError();
 
-        // Basic checks
         if (!family.value.trim()) {
           e.preventDefault();
           showError('Please enter your family name.');
