@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nidhi @ 40 — Live Love Notes Wall</title>
+  <title>Nidhi @ 40 — Live Wishes</title>
   <style>
     :root{--pink:#ff2ea6;--ink:#101010;}
     *{box-sizing:border-box}
@@ -15,8 +15,10 @@
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;padding:18px}
     .card{border:2px solid #ffd2ea;border-radius:18px;padding:16px;background:#fff;box-shadow:0 6px 16px rgba(255,46,166,.12)}
     .name{font-weight:700;color:#c9006c;margin-bottom:8px}
-    .msg{font-size:16px;line-height:1.35;}
-    .muted{color:#666}
+    .msg{font-size:16px;line-height:1.35}
+    footer{display:flex;gap:12px;margin-top:10px}
+    button{cursor:pointer;border:none;border-radius:8px;padding:6px 10px;font-size:14px;background:#ffd2ea;color:#c9006c}
+    button:hover{background:#ffb5de}
   </style>
 </head>
 <body>
@@ -30,6 +32,8 @@
     const grid = document.getElementById('grid');
     const dot  = document.getElementById('dot');
     let lastCount = 0;
+    const deleted = JSON.parse(localStorage.getItem('nidhi40_deleted')||'[]');
+    const likes   = JSON.parse(localStorage.getItem('nidhi40_likes')||'{}');
 
     async function load(){
       try{
@@ -37,7 +41,7 @@
         const data = await res.json();
         if(!data.ok) throw new Error('not ok');
         dot.classList.add('ok');
-        const items = data.items.filter(x=>x.consent);
+        const items = data.items.filter(x=>x.consent).map(it=>({...it,id:idFor(it)})).filter(it=>!deleted.includes(it.id));
         if(items.length!==lastCount){
           grid.innerHTML = items.slice(-120).map(render).join('');
           lastCount = items.length;
@@ -48,14 +52,37 @@
     function render(it){
       const name = escapeHtml(it.name||'');
       const msg  = escapeHtml(it.message||'');
-      return `<article class="card"><div class="name">${name}</div><div class="msg">${msg}</div></article>`;
+      const likeCount = likes[it.id]||0;
+      return `<article class="card" data-id="${it.id}"><div class="name">${name}</div><div class="msg">${msg}</div><footer><button class="like">❤️ <span>${likeCount}</span></button><button class="del">🗑️</button></footer></article>`;
+    }
+
+    grid.addEventListener('click', ev=>{
+      const card = ev.target.closest('.card');
+      if(!card) return;
+      const id = card.getAttribute('data-id');
+      if(ev.target.closest('.like')){
+        likes[id] = (likes[id]||0)+1;
+        localStorage.setItem('nidhi40_likes', JSON.stringify(likes));
+        ev.target.closest('.like').querySelector('span').textContent = likes[id];
+      } else if(ev.target.closest('.del')){
+        deleted.push(id);
+        localStorage.setItem('nidhi40_deleted', JSON.stringify(deleted));
+        card.remove();
+      }
+    });
+
+    function idFor(it){
+      const str = (it.name||'')+'|'+(it.message||'');
+      let h=0;
+      for(let i=0;i<str.length;i++) h = (Math.imul(31,h) + str.charCodeAt(i)) | 0;
+      return h.toString(16);
     }
 
     function escapeHtml(s){
-      return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+      return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
     }
 
-    load(); setInterval(load, 4000);
+    load(); setInterval(load,4000);
   </script>
 </body>
 </html>
